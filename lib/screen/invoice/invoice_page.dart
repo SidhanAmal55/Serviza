@@ -789,7 +789,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                               ),
                               pw.Text('Iringavoor, Cheriyamundam,Tirur'),
                               pw.Text('Phone: 9048984583'),
-                              pw.Text('Phone: 9847297669'),
+                              pw.Text('9847297669'),
                             ],
                           ),
                         ],
@@ -923,14 +923,12 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                                 ),
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(6),
-                                  child: pw.Text(
-                                    '${rate.toStringAsFixed(2)}/-',
-                                  ),
+                                  child: pw.Text('${rate.toStringAsFixed(2)}'),
                                 ),
                                 pw.Padding(
                                   padding: const pw.EdgeInsets.all(6),
                                   child: pw.Text(
-                                    '${amount.toStringAsFixed(2)}/-',
+                                    '${amount.toStringAsFixed(2)}',
                                   ),
                                 ),
                               ],
