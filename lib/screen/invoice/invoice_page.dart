@@ -20,6 +20,7 @@ class InvoicePreviewPage extends StatefulWidget {
   final String? customerAddress;
   final List<Map<String, dynamic>>? itemList;
   final double? advance;
+  final double? discount;
 
   const InvoicePreviewPage({
     super.key,
@@ -30,6 +31,7 @@ class InvoicePreviewPage extends StatefulWidget {
     this.customerAddress,
     this.itemList,
     this.advance,
+    this.discount,
   });
 
   @override
@@ -39,10 +41,11 @@ class InvoicePreviewPage extends StatefulWidget {
 class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
   final TextEditingController invoiceNoController = TextEditingController();
   final TextEditingController _invoiceDateController = TextEditingController();
-  final TextEditingController _discountController = TextEditingController(
-    text: '0',
-  );
+  final TextEditingController _discountController = TextEditingController();
+  final TextEditingController _advanceController = TextEditingController();
   double total = 0.0;
+  double grandtotal = 0.0;
+
   final GlobalKey _invoiceKey = GlobalKey();
 
   final List<Map<String, dynamic>> items = [
@@ -76,7 +79,8 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
 
     invoiceNoController.text = widget.invoiceNo ?? '';
     _invoiceDateController.text = widget.invoiceDate ?? '';
-    _discountController.text = widget.advance?.toString() ?? '0';
+    _discountController.text = widget.discount?.toString() ?? '0';
+    _advanceController.text = widget.advance?.toString() ?? '0';
 
     customerName = widget.customerName ?? '';
     customerAddress = widget.customerAddress ?? '';
@@ -151,11 +155,12 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
         'customerName': customerName ?? '',
         'customerAddress': customerAddress ?? '',
         'subtotal': subtotal,
-        'advance': double.tryParse(_discountController.text) ?? 0.0,
+        'advance': double.tryParse(_advanceController.text) ?? 0.0,
         'balanceAmount': total,
         'items': items,
         'timestamp': FieldValue.serverTimestamp(),
         'status': status ?? "Pending..",
+        'discount': double.tryParse(_discountController.text) ?? 0.0,
       };
 
       if (snapshot.exists) {
@@ -244,11 +249,13 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
       tempSubtotal += quantity * rate;
     }
 
-    double discount = double.tryParse(_discountController.text) ?? 0.0;
+    double disc = double.tryParse(_discountController.text) ?? 0.0;
+    double adv = double.tryParse(_advanceController.text) ?? 0.0;
 
     setState(() {
       subtotal = tempSubtotal;
-      total = subtotal - discount;
+      grandtotal = subtotal - disc;
+      total = grandtotal - adv;
     });
   }
 
@@ -429,18 +436,29 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                "Total: ₹${subtotal.toStringAsFixed(2)}",
-                                style: const TextStyle(
-                                  color: Color(0xFF5D4037),
-                                ),
-                              ),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    "Advance",
+                                    "Total:",
+                                    style: TextStyle(color: Color(0xFF5D4037)),
+                                  ),
+                                  Text(
+                                    "₹${subtotal.toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                      color: Color(0xFF5D4037),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "Discount",
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Color(0xFF5D4037),
@@ -459,13 +477,60 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                                   ),
                                 ],
                               ),
+                              SizedBox(height: 10),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    " Grand Total:",
+                                    style: TextStyle(
+                                      color: Color(0xFF5D4037),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    "₹${grandtotal.toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                      color: Color(0xFF5D4037),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "Advance",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF5D4037),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: TextField(
+                                      controller: _advanceController,
+                                      keyboardType: TextInputType.number,
+                                      decoration: const InputDecoration(
+                                        hintText: '0',
+                                      ),
+                                      onChanged: (_) => _calculateTotal(),
+                                    ),
+                                  ),
+                                ],
+                              ),
                               const SizedBox(height: 10),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    "Balance Amount",
+                                    " Net Balance ",
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -958,15 +1023,23 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                                   "${subtotal.toStringAsFixed(2)}/-",
                                 ),
                                 _pdfPriceRow(
-                                  "Advance",
+                                  "Discount",
                                   "${_discountController.text}/-",
+                                ),
+                                _pdfPriceRow(
+                                  " Grant Total",
+                                  "${(subtotal - (double.tryParse(_discountController.text) ?? 0)).toStringAsFixed(2)}/-",
+                                ),
+                                _pdfPriceRow(
+                                  "Advance",
+                                  "${_advanceController.text}/-",
                                 ),
                                 pw.Divider(
                                   thickness: 0.8,
                                   color: PdfColors.grey600,
                                 ),
                                 _pdfPriceRow(
-                                  "Balance",
+                                  " Net Balance",
                                   "${total.toStringAsFixed(2)}/-",
                                   isBold: true,
                                 ),

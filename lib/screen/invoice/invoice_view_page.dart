@@ -28,6 +28,10 @@ class Invoiceview extends StatelessWidget {
       double rate = double.tryParse('${item['rate']}') ?? 0;
       return sum + (qty * rate);
     });
+    double discount = double.tryParse('${invoiceData['discount'] ?? 0}') ?? 0;
+    double advance = double.tryParse('${invoiceData['advance'] ?? 0}') ?? 0;
+    double balance =
+        double.tryParse('${invoiceData['balanceAmount'] ?? 0}') ?? 0;
 
     return Scaffold(
       backgroundColor: creamWhite,
@@ -59,6 +63,7 @@ class Invoiceview extends StatelessWidget {
                             invoiceData['items'],
                           ),
                           advance: invoiceData['advance'],
+                          discount: invoiceData['discount'],
                         ),
                   ),
                 );
@@ -146,20 +151,27 @@ class Invoiceview extends StatelessWidget {
               // Totals Card
               _buildInfoCard(lightBeige, [
                 _priceRow(
-                  "TOTAL",
+                  "Total",
                   "₹${subtotal.toStringAsFixed(0)}",
                   true,
                   primaryBrown,
                 ),
                 _priceRow(
-                  "Advance",
-                  "₹${invoiceData['advance']}",
+                  "Discount",
+                  "₹${discount.toStringAsFixed(0)}",
                   false,
                   primaryBrown,
                 ),
+                _priceRow(
+                  "Grand Total",
+                  "₹${subtotal - discount}",
+                  true,
+                  primaryBrown,
+                ),
+                _priceRow("Advance", "₹${advance}", false, primaryBrown),
                 Divider(thickness: 1, color: creamWhite),
                 _priceRow(
-                  "Balance Amount",
+                  "Net Balance",
                   "₹${invoiceData['balanceAmount']}",
                   true,
                   Colors.redAccent,
