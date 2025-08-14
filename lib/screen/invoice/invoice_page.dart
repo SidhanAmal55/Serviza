@@ -1027,7 +1027,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                                   "${_discountController.text}/-",
                                 ),
                                 _pdfPriceRow(
-                                  " Grant Total",
+                                  "Grand Total",
                                   "${(subtotal - (double.tryParse(_discountController.text) ?? 0)).toStringAsFixed(2)}/-",
                                 ),
                                 _pdfPriceRow(
