@@ -750,378 +750,89 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
     Share.share(buffer.toString());
   }
 
-  pw.Widget _pdfLabelValue(String label, String? value) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 4),
-      child: pw.Row(
-        children: [
-          pw.Text(
-            "$label ",
-            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-          ),
-          pw.Text(value ?? ''),
-        ],
-      ),
-    );
-  }
+  // pw.Widget _pdfLabelValue(String label, String? value) {
+  //   return pw.Padding(
+  //     padding: const pw.EdgeInsets.only(bottom: 4),
+  //     child: pw.Row(
+  //       children: [
+  //         pw.Text(
+  //           "$label ",
+  //           style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+  //         ),
+  //         pw.Text(value ?? ''),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Future<pw.Document> generateInvoicePdf() async {
-    // Load logo
-    final ByteData logoBytes = await rootBundle.load(
-      'assets/images/Bismi Logo.png',
+    // Load assets
+    final logoImage = pw.MemoryImage(
+      (await rootBundle.load(
+        'assets/images/Bismi Logo.png',
+      )).buffer.asUint8List(),
     );
-    final Uint8List logoData = logoBytes.buffer.asUint8List();
-    final logoImage = pw.MemoryImage(logoData);
 
-    // Load corner images
-    final ByteData topLeftBytes = await rootBundle.load(
-      'assets/images/top_left wave.png',
+    final topLeftImage = pw.MemoryImage(
+      (await rootBundle.load(
+        'assets/images/top_left wave.png',
+      )).buffer.asUint8List(),
     );
-    final Uint8List topLeftData = topLeftBytes.buffer.asUint8List();
-    final topLeftImage = pw.MemoryImage(topLeftData);
 
-    final ByteData bottomRightBytes = await rootBundle.load(
-      'assets/images/bottom_right.png',
+    final bottomRightImage = pw.MemoryImage(
+      (await rootBundle.load(
+        'assets/images/bottom_right.png',
+      )).buffer.asUint8List(),
     );
-    final Uint8List bottomRightData = bottomRightBytes.buffer.asUint8List();
-    final bottomRightImage = pw.MemoryImage(bottomRightData);
 
     final pdf = pw.Document();
 
-    const baseColor = PdfColors.yellow200;
-    const accentColor = PdfColors.yellow200;
-    const lightGray = PdfColors.red300;
+    // ------- Prepare parsed items and totals -------
+    final parsedItems =
+        items.asMap().entries.map((entry) {
+          final idx = entry.key;
+          final item = entry.value;
+          final qty = double.tryParse(item['qty']?.toString() ?? '') ?? 0.0;
+          final rate = double.tryParse(item['rate']?.toString() ?? '') ?? 0.0;
+          final amount = qty * rate;
+          return {
+            'index': idx + 1,
+            'item': (item['item'] ?? '').toString(),
+            'qty': qty,
+            'rate': rate,
+            'amount': amount,
+          };
+        }).toList();
 
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.all(0),
-        build: (context) {
-          return pw.Stack(
-            children: [
-              // Top-left background image
-              pw.Positioned(
-                top: 0,
-                left: 0,
-                child: pw.Image(topLeftImage, width: 220),
-              ),
-
-              // Bottom-right background image
-              pw.Positioned(
-                bottom: 0,
-                right: 0,
-                child: pw.Image(bottomRightImage, width: 220),
-              ),
-
-              pw.Positioned.fill(
-                child: pw.Center(
-                  child: pw.Opacity(
-                    opacity: 0.08, // Low intensity
-                    child: pw.Image(
-                      logoImage,
-                      width: 300,
-                    ), // Adjust size as needed
-                  ),
-                ),
-              ),
-
-              // Main content
-              pw.Padding(
-                padding: pw.EdgeInsets.all(24),
-                child: pw.Container(
-                  decoration: pw.BoxDecoration(
-                    // border: pw.Border.all(color: PdfColors.),
-                  ),
-                  padding: pw.EdgeInsets.all(20),
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      // Header with Logo and Company Info
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                        children: [
-                          pw.Text(""),
-                          pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.end,
-                            children: [
-                              //pw.Image(logoImage, width: 35, height: 35),
-                              pw.Text(
-                                'Bismi Cater Events',
-                                style: pw.TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: pw.FontWeight.bold,
-                                ),
-                              ),
-                              pw.Text('Iringavoor, Cheriyamundam,Tirur'),
-                              pw.Text('Phone: 9048984583'),
-                              pw.Text('9847297669'),
-                            ],
-                          ),
-                        ],
-                      ),
-                      pw.SizedBox(height: 26),
-
-                      // Invoice Title
-                      // pw.Center(
-                      //   child: pw.Container(
-                      //     color: PdfColors.yellow,
-                      //     padding: const pw.EdgeInsets.symmetric(
-                      //       vertical: 6,
-                      //       horizontal: 12,
-                      //     ),
-                      //     child: pw.Text(
-                      //       'INVOICE',
-                      //       style: pw.TextStyle(
-                      //         fontSize: 22,
-                      //         color: PdfColors.red,
-                      //         fontWeight: pw.FontWeight.bold,
-                      //         letterSpacing: 1.2,
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
-                      pw.SizedBox(height: 16),
-
-                      // Bill To and Invoice Info
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.start,
-                            children: [
-                              pw.Text(
-                                "Bill To",
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  color: PdfColors.black,
-                                ),
-                              ),
-                              pw.SizedBox(height: 4),
-                              pw.Text(customerName ?? ''),
-                              pw.Text(customerAddress ?? ''),
-                            ],
-                          ),
-                          pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.start,
-                            children: [
-                              pw.Text(
-                                "Invoice Details",
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  color: PdfColors.black,
-                                ),
-                              ),
-                              pw.SizedBox(height: 4),
-                              pw.Text(
-                                "Invoice No.: ${invoiceNoController.text}",
-                              ),
-                              pw.Text("Date: ${_invoiceDateController.text}"),
-                            ],
-                          ),
-                        ],
-                      ),
-                      pw.SizedBox(height: 20),
-
-                      // Table Header
-                      pw.Table(
-                        border: pw.TableBorder.all(
-                          color: PdfColors.grey300,
-                          width: 0.5,
-                        ),
-                        columnWidths: {
-                          0: pw.FlexColumnWidth(1),
-                          1: pw.FlexColumnWidth(4),
-                          2: pw.FlexColumnWidth(2),
-                          3: pw.FlexColumnWidth(2),
-                          4: pw.FlexColumnWidth(2),
-                        },
-                        children: [
-                          pw.TableRow(
-                            decoration: pw.BoxDecoration(
-                              color: PdfColors.yellow,
-                            ),
-                            children:
-                                ['#', 'Item Name', 'Quantity', 'Rate', 'Amount']
-                                    .map(
-                                      (h) => pw.Padding(
-                                        padding: const pw.EdgeInsets.all(6),
-                                        child: pw.Text(
-                                          h,
-                                          style: pw.TextStyle(
-                                            color: PdfColors.black,
-                                            fontWeight: pw.FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                          ),
-                          ...items.asMap().entries.map((entry) {
-                            final i = entry.key + 1;
-                            final item = entry.value;
-                            final qty =
-                                double.tryParse(item['qty'].toString()) ?? 0;
-                            final rate =
-                                double.tryParse(item['rate'].toString()) ?? 0;
-                            final amount = qty * rate;
-
-                            return pw.TableRow(
-                              decoration: pw.BoxDecoration(
-                                color:
-                                    (i % 2 == 0)
-                                        ? PdfColors.yellow300
-                                        : PdfColors.yellow200,
-                              ),
-                              children: [
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.all(6),
-                                  child: pw.Text(i.toString()),
-                                ),
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.all(6),
-                                  child: pw.Text(item['item'] ?? ''),
-                                ),
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.all(6),
-                                  child: pw.Text(qty.toStringAsFixed(0)),
-                                ),
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.all(6),
-                                  child: pw.Text('${rate.toStringAsFixed(2)}'),
-                                ),
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.all(6),
-                                  child: pw.Text(
-                                    '${amount.toStringAsFixed(2)}',
-                                  ),
-                                ),
-                              ],
-                            );
-                          }),
-                        ],
-                      ),
-
-                      pw.SizedBox(height: 20),
-
-                      // Summary Section
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.end,
-                        children: [
-                          pw.Container(
-                            width: 240,
-                            decoration: pw.BoxDecoration(
-                              color: PdfColors.yellow200,
-                              borderRadius: pw.BorderRadius.circular(6),
-                            ),
-                            padding: pw.EdgeInsets.all(12),
-                            child: pw.Column(
-                              crossAxisAlignment: pw.CrossAxisAlignment.start,
-                              children: [
-                                _pdfPriceRow(
-                                  "Total",
-                                  "${subtotal.toStringAsFixed(2)}/-",
-                                ),
-                                _pdfPriceRow(
-                                  "Discount",
-                                  "${_discountController.text}/-",
-                                ),
-                                _pdfPriceRow(
-                                  "Grand Total",
-                                  "${(subtotal - (double.tryParse(_discountController.text) ?? 0)).toStringAsFixed(2)}/-",
-                                ),
-                                _pdfPriceRow(
-                                  "Advance",
-                                  "${_advanceController.text}/-",
-                                ),
-                                pw.Divider(
-                                  thickness: 0.8,
-                                  color: PdfColors.grey600,
-                                ),
-                                _pdfPriceRow(
-                                  " Net Balance",
-                                  "${total.toStringAsFixed(2)}/-",
-                                  isBold: true,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      pw.SizedBox(height: 16),
-                      // Amount in Words section
-                      pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Container(
-                            color: PdfColors.yellow,
-                            padding: pw.EdgeInsets.symmetric(
-                              vertical: 4,
-                              horizontal: 8,
-                            ),
-                            child: pw.Text(
-                              "Amount in Words",
-                              style: pw.TextStyle(
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.black,
-                              ),
-                            ),
-                          ),
-                          pw.SizedBox(height: 4),
-                          pw.Padding(
-                            padding: pw.EdgeInsets.symmetric(horizontal: 8),
-                            child: pw.Text(_convertToWords(total)),
-                          ),
-                        ],
-                      ),
-
-                      pw.SizedBox(height: 16),
-
-                      // Terms and Conditions section
-                      pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Container(
-                            color: PdfColors.yellow,
-                            padding: pw.EdgeInsets.symmetric(
-                              vertical: 4,
-                              horizontal: 8,
-                            ),
-                            child: pw.Text(
-                              "Terms and Conditions",
-                              style: pw.TextStyle(
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.black,
-                              ),
-                            ),
-                          ),
-                          pw.SizedBox(height: 4),
-                          pw.Padding(
-                            padding: pw.EdgeInsets.symmetric(horizontal: 8),
-                            child: pw.Text(
-                              "Thank you for doing business with us.",
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+    final double subtotal = parsedItems.fold(
+      0.0,
+      (acc, e) => acc + (e['amount'] as double),
     );
+    final double discountVal = double.tryParse(_discountController.text) ?? 0.0;
+    final double advanceVal = double.tryParse(_advanceController.text) ?? 0.0;
+    final double grandTotal = subtotal - discountVal;
+    final double total = grandTotal - advanceVal; // Net Balance
 
-    return pdf;
-  }
+    // ------- Local helper widgets (keeps cells consistent) -------
+    pw.Widget _pdfCell(
+      String text, {
+      pw.Alignment align = pw.Alignment.centerLeft,
+      bool bold = false,
+    }) {
+      return pw.Container(
+        alignment: align,
+        padding: const pw.EdgeInsets.all(6),
+        child: pw.Text(
+          text,
+          style: pw.TextStyle(
+            fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+          ),
+        ),
+      );
+    }
 
-  pw.Widget _pdfPriceRow(String label, String value, {bool isBold = false}) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 2),
-      child: pw.Row(
+    pw.Widget _pdfPriceRow(String label, String value, {bool isBold = false}) {
+      return pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text(
@@ -1137,9 +848,304 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
             ),
           ),
         ],
+      );
+    }
+
+    // ------- Build PDF -------
+    pdf.addPage(
+      pw.MultiPage(
+        pageTheme: pw.PageTheme(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+
+          // Watermark (all pages) + first-page top-left art
+          buildBackground:
+              (context) => pw.FullPage(
+                ignoreMargins: true, // ✅ ignores page content margin
+                child: pw.Stack(
+                  children: [
+                    // Watermark (all pages)
+                    pw.Positioned.fill(
+                      child: pw.Center(
+                        child: pw.Opacity(
+                          opacity: 0.06,
+                          child: pw.Image(logoImage, width: 280),
+                        ),
+                      ),
+                    ),
+
+                    // First page only top-left art
+                    if (context.pageNumber == 1)
+                      pw.Positioned(
+                        top: 0,
+                        left: 0,
+                        child: pw.Image(topLeftImage, width: 180),
+                      ),
+                  ],
+                ),
+              ),
+          buildForeground:
+              (context) => pw.FullPage(
+                ignoreMargins: true, // ✅ ignore margins here too
+                child: pw.Stack(
+                  children: [
+                    if (context.pageNumber == context.pagesCount)
+                      pw.Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: pw.Image(bottomRightImage, width: 180),
+                      ),
+                  ],
+                ),
+              ),
+        ),
+        // Keep header/footer null for a clean look (you can change if needed)
+        header: null,
+        footer: null,
+
+        build:
+            (context) => [
+              // Company heading
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.SizedBox(height: 120),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text(
+                        'Bismi Cater Events',
+                        style: pw.TextStyle(
+                          fontSize: 18,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                      pw.Text('Iringavoor, Cheriyamundam, Tirur'),
+                      pw.Text('Phone: 9048984583, 9847297669'),
+                    ],
+                  ),
+                ],
+              ),
+
+              pw.SizedBox(height: 20),
+
+              // Bill To and Invoice details
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        "Bill To",
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Text(customerName ?? ''),
+                      pw.Text(customerAddress ?? ''),
+                    ],
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        "Invoice Details",
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Text("Invoice No.: ${invoiceNoController.text}"),
+                      pw.Text("Date: ${_invoiceDateController.text}"),
+                    ],
+                  ),
+                ],
+              ),
+
+              pw.SizedBox(height: 20),
+
+              // ---------------- Items table (manual) ----------------
+              pw.Table(
+                border: pw.TableBorder.all(
+                  color: PdfColors.grey300,
+                  width: 0.5,
+                ),
+                columnWidths: const {
+                  0: pw.FlexColumnWidth(0.7),
+                  1: pw.FlexColumnWidth(2.8),
+                  2: pw.FlexColumnWidth(1.0),
+                  3: pw.FlexColumnWidth(1.0),
+                  4: pw.FlexColumnWidth(1.2),
+                },
+                children: [
+                  // Header row
+                  pw.TableRow(
+                    decoration: const pw.BoxDecoration(color: PdfColors.yellow),
+                    children: [
+                      _pdfCell(
+                        '#',
+                        align: pw.Alignment.centerRight,
+                        bold: true,
+                      ),
+                      _pdfCell(
+                        'Item Name',
+                        align: pw.Alignment.centerLeft,
+                        bold: true,
+                      ),
+                      _pdfCell(
+                        'Quantity',
+                        align: pw.Alignment.centerRight,
+                        bold: true,
+                      ),
+                      _pdfCell(
+                        'Rate',
+                        align: pw.Alignment.centerRight,
+                        bold: true,
+                      ),
+                      _pdfCell(
+                        'Amount',
+                        align: pw.Alignment.centerRight,
+                        bold: true,
+                      ),
+                    ],
+                  ),
+
+                  // Body rows (zebra)
+                  ...parsedItems.asMap().entries.map((entry) {
+                    final idx = entry.key;
+                    final it = entry.value;
+                    final bg =
+                        idx.isEven ? PdfColors.yellow200 : PdfColors.yellow300;
+
+                    return pw.TableRow(
+                      decoration: pw.BoxDecoration(color: bg),
+                      children: [
+                        _pdfCell(
+                          '${it['index']}',
+                          align: pw.Alignment.centerRight,
+                        ),
+                        _pdfCell(
+                          '${it['item']}',
+                          align: pw.Alignment.centerLeft,
+                        ),
+                        _pdfCell(
+                          (it['qty'] as double).toStringAsFixed(0),
+                          align: pw.Alignment.centerRight,
+                        ),
+                        _pdfCell(
+                          (it['rate'] as double).toStringAsFixed(2),
+                          align: pw.Alignment.centerRight,
+                        ),
+                        _pdfCell(
+                          (it['amount'] as double).toStringAsFixed(2),
+                          align: pw.Alignment.centerRight,
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ],
+              ),
+
+              pw.SizedBox(height: 20),
+
+              // Totals box (right aligned)
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Container(
+                  width: 240,
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.yellow200,
+                    borderRadius: pw.BorderRadius.circular(6),
+                  ),
+                  padding: const pw.EdgeInsets.all(12),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      _pdfPriceRow("Total", "${subtotal.toStringAsFixed(2)}/-"),
+                      _pdfPriceRow(
+                        "Discount",
+                        "${discountVal.toStringAsFixed(2)}/-",
+                      ),
+                      _pdfPriceRow(
+                        "Grand Total",
+                        "${grandTotal.toStringAsFixed(2)}/-",
+                      ),
+                      _pdfPriceRow(
+                        "Advance",
+                        "${advanceVal.toStringAsFixed(2)}/-",
+                      ),
+                      pw.Divider(thickness: 0.8, color: PdfColors.grey600),
+                      _pdfPriceRow(
+                        "Net Balance",
+                        "${total.toStringAsFixed(2)}/-",
+                        isBold: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              pw.SizedBox(height: 16),
+
+              // Amount in words
+              pw.Container(
+                color: PdfColors.yellow,
+                padding: const pw.EdgeInsets.symmetric(
+                  vertical: 4,
+                  horizontal: 8,
+                ),
+                child: pw.Text(
+                  "Amount in Words",
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.SizedBox(height: 4),
+              pw.Text(_convertToWords(total)), // assumes you have this helper
+
+              pw.SizedBox(height: 16),
+
+              // Terms
+              pw.Container(
+                color: PdfColors.yellow,
+                padding: const pw.EdgeInsets.symmetric(
+                  vertical: 4,
+                  horizontal: 8,
+                ),
+                child: pw.Text(
+                  "Terms and Conditions",
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.SizedBox(height: 4),
+              pw.Text("Thank you for doing business with us."),
+            ],
       ),
     );
+
+    return pdf;
   }
+
+  // pw.Widget _pdfPriceRow(String label, String value, {bool isBold = false}) {
+  //   return pw.Padding(
+  //     padding: const pw.EdgeInsets.symmetric(vertical: 2),
+  //     child: pw.Row(
+  //       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         pw.Text(
+  //           label,
+  //           style: pw.TextStyle(
+  //             fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+  //           ),
+  //         ),
+  //         pw.Text(
+  //           value,
+  //           style: pw.TextStyle(
+  //             fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   String _convertToWords(double number) {
     final int n = number.round();
@@ -1252,30 +1258,6 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
               ),
             ],
           ),
-    );
-  }
-
-  Future<void> _generatePdf(BuildContext context) async {
-    final pdf = pw.Document();
-
-    pdf.addPage(
-      pw.Page(
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text('Invoice No: ${invoiceNoController.text}'),
-              pw.Text('Customer Name: $customerName'),
-              pw.Text('Customer Address: $customerAddress'),
-              pw.Text('Total: ₹${total.toStringAsFixed(2)}'),
-            ],
-          );
-        },
-      ),
-    );
-
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
     );
   }
 
