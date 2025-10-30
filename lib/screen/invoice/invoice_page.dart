@@ -483,7 +483,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    " Grand Total:",
+                                    " OB:",
                                     style: TextStyle(
                                       color: Color(0xFF5D4037),
                                       fontWeight: FontWeight.bold,
@@ -505,7 +505,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    "Advance",
+                                    "Paid Amount",
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Color(0xFF5D4037),
@@ -744,7 +744,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
 
     buffer.writeln("");
     buffer.writeln("Subtotal: ₹${subtotal.toStringAsFixed(2)}");
-    buffer.writeln("Advance: ₹${_discountController.text}");
+    buffer.writeln("Paid Amount: ₹${_discountController.text}");
     buffer.writeln("Balance Amount: ₹${total.toStringAsFixed(2)}");
 
     Share.share(buffer.toString());
@@ -1065,12 +1065,9 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                         "Discount",
                         "${discountVal.toStringAsFixed(2)}/-",
                       ),
+                      _pdfPriceRow("OB", "${grandTotal.toStringAsFixed(2)}/-"),
                       _pdfPriceRow(
-                        "Grand Total",
-                        "${grandTotal.toStringAsFixed(2)}/-",
-                      ),
-                      _pdfPriceRow(
-                        "Advance",
+                        "Paid Amount",
                         "${advanceVal.toStringAsFixed(2)}/-",
                       ),
                       pw.Divider(thickness: 0.8, color: PdfColors.grey600),

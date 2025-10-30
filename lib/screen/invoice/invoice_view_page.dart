@@ -162,13 +162,8 @@ class Invoiceview extends StatelessWidget {
                   false,
                   primaryBrown,
                 ),
-                _priceRow(
-                  "Grand Total",
-                  "₹${subtotal - discount}",
-                  true,
-                  primaryBrown,
-                ),
-                _priceRow("Advance", "₹${advance}", false, primaryBrown),
+                _priceRow("OB", "₹${subtotal - discount}", true, primaryBrown),
+                _priceRow("Paid Amount", "₹${advance}", false, primaryBrown),
                 Divider(thickness: 1, color: creamWhite),
                 _priceRow(
                   "Net Balance",
