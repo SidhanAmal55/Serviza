@@ -21,6 +21,7 @@ class InvoicePreviewPage extends StatefulWidget {
   final List<Map<String, dynamic>>? itemList;
   final double? advance;
   final double? discount;
+  final double? ob;
 
   const InvoicePreviewPage({
     super.key,
@@ -32,6 +33,7 @@ class InvoicePreviewPage extends StatefulWidget {
     this.itemList,
     this.advance,
     this.discount,
+    this.ob,
   });
 
   @override
@@ -43,8 +45,10 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
   final TextEditingController _invoiceDateController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
   final TextEditingController _advanceController = TextEditingController();
+  final TextEditingController _obController = TextEditingController();
   double total = 0.0;
   double grandtotal = 0.0;
+  double temptotal = 0.0;
 
   final GlobalKey _invoiceKey = GlobalKey();
 
@@ -81,7 +85,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
     _invoiceDateController.text = widget.invoiceDate ?? '';
     _discountController.text = widget.discount?.toString() ?? '0';
     _advanceController.text = widget.advance?.toString() ?? '0';
-
+    _obController.text = widget.ob?.toString() ?? '0';
     customerName = widget.customerName ?? '';
     customerAddress = widget.customerAddress ?? '';
 
@@ -161,6 +165,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
         'timestamp': FieldValue.serverTimestamp(),
         'status': status ?? "Pending..",
         'discount': double.tryParse(_discountController.text) ?? 0.0,
+        'ob': double.tryParse(_obController.text) ?? 0.0,
       };
 
       if (snapshot.exists) {
@@ -251,11 +256,13 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
 
     double disc = double.tryParse(_discountController.text) ?? 0.0;
     double adv = double.tryParse(_advanceController.text) ?? 0.0;
+    double OB = double.tryParse(_obController.text) ?? 0.0;
 
     setState(() {
       subtotal = tempSubtotal;
       grandtotal = subtotal - disc;
-      total = grandtotal - adv;
+      temptotal = grandtotal + OB;
+      total = temptotal - adv;
     });
   }
 
@@ -489,11 +496,15 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  Text(
-                                    "₹${grandtotal.toStringAsFixed(2)}",
-                                    style: const TextStyle(
-                                      color: Color(0xFF5D4037),
-                                      fontWeight: FontWeight.bold,
+                                  SizedBox(
+                                    width: 100,
+                                    child: TextField(
+                                      controller: _obController,
+                                      keyboardType: TextInputType.number,
+                                      decoration: const InputDecoration(
+                                        hintText: '0',
+                                      ),
+                                      onChanged: (_) => _calculateTotal(),
                                     ),
                                   ),
                                 ],
@@ -744,6 +755,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
 
     buffer.writeln("");
     buffer.writeln("Subtotal: ₹${subtotal.toStringAsFixed(2)}");
+    buffer.writeln("OB : ₹${_obController.text} ");
     buffer.writeln("Paid Amount: ₹${_discountController.text}");
     buffer.writeln("Balance Amount: ₹${total.toStringAsFixed(2)}");
 
@@ -810,8 +822,10 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
     );
     final double discountVal = double.tryParse(_discountController.text) ?? 0.0;
     final double advanceVal = double.tryParse(_advanceController.text) ?? 0.0;
+    final double obVal = double.tryParse(_obController.text) ?? 0.0;
     final double grandTotal = subtotal - discountVal;
-    final double total = grandTotal - advanceVal; // Net Balance
+    final double tempTotal = grandTotal + obVal;
+    final double total = tempTotal - advanceVal; // Net Balance
 
     // ------- Local helper widgets (keeps cells consistent) -------
     pw.Widget _pdfCell(
@@ -1065,7 +1079,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
                         "Discount",
                         "${discountVal.toStringAsFixed(2)}/-",
                       ),
-                      _pdfPriceRow("OB", "${grandTotal.toStringAsFixed(2)}/-"),
+                      _pdfPriceRow("OB", "${obVal.toStringAsFixed(2)}/-"),
                       _pdfPriceRow(
                         "Paid Amount",
                         "${advanceVal.toStringAsFixed(2)}/-",
