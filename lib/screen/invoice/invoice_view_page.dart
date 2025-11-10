@@ -29,6 +29,8 @@ class Invoiceview extends StatelessWidget {
       return sum + (qty * rate);
     });
     double discount = double.tryParse('${invoiceData['discount'] ?? 0}') ?? 0;
+    double ob = double.tryParse('${invoiceData['ob'] ?? 0}') ?? 0;
+
     double advance = double.tryParse('${invoiceData['advance'] ?? 0}') ?? 0;
     double balance =
         double.tryParse('${invoiceData['balanceAmount'] ?? 0}') ?? 0;
@@ -64,6 +66,7 @@ class Invoiceview extends StatelessWidget {
                           ),
                           advance: invoiceData['advance'],
                           discount: invoiceData['discount'],
+                          ob: invoiceData['ob'],
                         ),
                   ),
                 );
@@ -159,10 +162,16 @@ class Invoiceview extends StatelessWidget {
                 _priceRow(
                   "Discount",
                   "₹${discount.toStringAsFixed(0)}",
+
                   false,
                   primaryBrown,
                 ),
-                _priceRow("OB", "₹${subtotal - discount}", true, primaryBrown),
+                _priceRow(
+                  "OB",
+                  "₹${ob.toStringAsFixed(0)}",
+                  true,
+                  primaryBrown,
+                ),
                 _priceRow("Paid Amount", "₹${advance}", false, primaryBrown),
                 Divider(thickness: 1, color: creamWhite),
                 _priceRow(

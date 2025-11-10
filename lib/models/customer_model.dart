@@ -35,24 +35,22 @@ class Customer {
       'contact': contact,
     };
   }
-  Customer copyWith({
-  String? id,
-  String? invoiceNo,
-  String? date,
-  String? name,
-  String? address,
-  String? contact,
- 
-}) {
-  return Customer(
-    id: id ?? this.id,
-    invoiceNo: invoiceNo ?? this.invoiceNo,
-    date: date ?? this.date,
-    name: name ?? this.name,
-    address: address ?? this.address,
-    contact: contact ?? this.contact,
-   
-  );
-}
 
+  Customer copyWith({
+    String? id,
+    String? invoiceNo,
+    String? date,
+    String? name,
+    String? address,
+    String? contact,
+  }) {
+    return Customer(
+      id: id ?? this.id,
+      invoiceNo: invoiceNo ?? this.invoiceNo,
+      date: date ?? this.date,
+      name: name ?? this.name,
+      address: address ?? this.address,
+      contact: contact ?? this.contact,
+    );
+  }
 }
